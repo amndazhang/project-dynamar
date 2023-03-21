@@ -1,59 +1,30 @@
-var map = L.map('map').setView([0, -100], 3);
+var map = L.map('map', {
+    center: [39.73, -104.99],
+    zoom: 10
+});
 
 var osm = L.tileLayer('https://api.maptiler.com/maps/openstreetmap/{z}/{x}/{y}.jpg?key=Laz3Xyzb9RTOE87DY37e', {
     attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
 }).addTo(map);
 
-// Read markers data from data.csv
-$.get('Processed_GPE3_Tracks_BUM_SAL.csv', function(csvString) {
+// cities
+var littleton = L.marker([39.61, -105.02]).bindPopup('This is Littleton, CO.'),
+    denver    = L.marker([39.74, -104.99]).bindPopup('This is Denver, CO.'),
+    aurora    = L.marker([39.73, -104.8]).bindPopup('This is Aurora, CO.'),
+    golden    = L.marker([39.77, -105.23]).bindPopup('This is Golden, CO.');
 
-    var data = Papa.parse(csvString, {header: true, dynamicTyping: true}).data;
+var cities = L.layerGroup([littleton, denver, aurora, golden]);
 
-    // Polylines
-    var count = 0;
-    var uniquePtt = 137;
-    var polylineLatlng = [];
-    var polylineLayer = [];
-    var ptt = data[0].ptt;
-    var i = 0;
-    while (count <= uniquePtt) {
-        var c;
-        polylineLatlng = [];
-        while (i < data.length) {
-            var row = data[i];
-            c = row.species == 'BUM' ? 'blue' : 'red';
-            if (ptt == row.ptt) {
-                polylineLatlng.push([row.lat, row.lon]);
-                polylineLayer.push([row.lat, row.lon]);
-            } else {
-                ptt = row.ptt;
-                break;
-            }
-            i++;
-        }
-        var lines = L.layerGroup(polylineLayer);
-        var polyline = L.polyline(polylineLatlng, {color: c, opacity: 0.5});
-        L.layerGroup(polyline).addTo(map);
-        count++;
-    }
+var overlayMaps = {
+    "Cities": cities
+};
 
-    // Points
-    var circles = [];
-    for (var j in data) {
-        var row = data[j];
-        var c = row.species == 'BUM' ? 'blue' : 'red';
+var layerControl = L.control.layers(null, overlayMaps).addTo(map);
 
-        var circle = L.circle([row.lat, row.lon], {
-            opacity: 1,
-            color: c
-        }).bindPopup(row.ptt)
-        circle.addTo(map);
-        circles.push(circle);
-    }
+// parks
+var crownHill = L.marker([39.75, -105.09]).bindPopup('This is Crown Hill Park.'),
+    rubyHill = L.marker([39.68, -105.00]).bindPopup('This is Ruby Hill Park.');
+    
+var parks = L.layerGroup([crownHill, rubyHill]);
 
-});
-
-// Attribution
-map.attributionControl.setPrefix(
-    'View <a href="https://github.com/amndazhang/project-dynamar" target="_blank">code on GitHub</a>'
-);
+layerControl.addOverlay(parks, "Parks");
